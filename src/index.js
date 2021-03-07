@@ -5,6 +5,11 @@ import './style/less/index.less';
 import data from './media/data.json';
 import print from './print';
 
+import { mul } from './test';
+
+// eslint-disable-next-line
+console.log('mul: ', mul(2, 3));
+
 
 print();
 
