@@ -13,11 +13,27 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCssAssetsWebpackPlugin = require('optimize-css-assets-webpack-plugin');
 
-// process.env.NODE_ENV = 'development'
+/**
+ * 缓存：
+ *  babel缓存
+ *      cacheDirectory: true
+ *      --> 让第二次打包构建速度更快
+ *  文件资源缓存
+ *      hash: 每次webpack构建时会生成一个唯一的hash值
+ *      问题：以为js和css同时使用一个hash值
+ *      如果重新打包，会导致所有缓存失效（可能只改动了一个文件）
+ *  chunkhash：根据chunk生成hash值，如果打包来源于同一个chunk，那么hash值就是一样的
+ *  问题：js和css的hash值还是一样的
+ *      因为css是在js中被引入的，所以同属于一个chunkhash
+ *  contenthash：根据文件的内容生成hash值
+ *  --> 让代码上线运行缓存更好使用
+ */
+
+process.env.NODE_ENV = 'production'
 module.exports = {
     entry: ['./src/index.js', './src/public/index.html'],
     output: {
-        filename: 'js/built.[hash:4].js',
+        filename: 'js/built.[contenthash:10].js',
         path: resolve(__dirname, 'build')
     },
     // target: ['web', 'es5'],
@@ -45,14 +61,14 @@ module.exports = {
                     {
                         test: /\.css$/,
                         use: [
-                            'style-loader', // 创建style标签，将样式放入
+                            // 'style-loader', // 创建style标签，将样式放入
                             // MiniCssExtractPlugin.loader,
-                            // {
-                            //     loader: MiniCssExtractPlugin.loader,
-                            //     options: {
-                            //         publicPath: '../'
-                            //     }
-                            // },
+                            {
+                                loader: MiniCssExtractPlugin.loader,
+                                options: {
+                                    publicPath: '../'
+                                }
+                            },
                             'css-loader', // 将css整合到js中
                             /**
                              * css兼容性处理：postcss --> postcss-loader postcss-preset-env（识别环境）
@@ -91,12 +107,12 @@ module.exports = {
                         use: [
                             'style-loader', 
                             // MiniCssExtractPlugin.loader,
-                            // {
-                            //     loader: MiniCssExtractPlugin.loader,
-                            //     options: {
-                            //         publicPath: '../'
-                            //     }
-                            // },
+                            {
+                                loader: MiniCssExtractPlugin.loader,
+                                options: {
+                                    publicPath: '../'
+                                }
+                            },
                             'css-loader',
                             {
                                 loader: 'postcss-loader',
@@ -185,13 +201,13 @@ module.exports = {
                 removeComments: true
             }
         }),
-        // new MiniCssExtractPlugin({
-        //     filename: 'css/built.[hash:6].css'
-        // }),
+        new MiniCssExtractPlugin({
+            filename: 'css/built.[contenthash:10].css'
+        }),
         // 压缩 css
         new OptimizeCssAssetsWebpackPlugin()
     ],
-    mode: 'development',
+    mode: 'production',
     devServer: {
         contentBase: resolve(__dirname, 'build'),
         port: 3000,
@@ -201,7 +217,7 @@ module.exports = {
         // webpack 配置修改后需重启才能生效
         hot: true
     },
-    devtool: 'eval-source-map'
+    devtool: 'source-map'
 }
 
 /**
